@@ -1,0 +1,25 @@
+{
+    "name": "Nox.Social.Clients",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Nox.CCK",
+        "Nox.UI",
+        "Nox.Users",
+        "Nox.Network",
+        "Nox.Tables",
+        "Unity.TextMeshPro",
+        "Nox.CCK.Users",
+        "Nox.CCK.Network",
+        "Nox.CCK.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,65 @@
+{
+  "type": "mod",
+  "id": "nox.social",
+  "provides": [
+    "socials"
+  ],
+  "name": "Social",
+  "version": "1.0.0",
+  "description": "Provides social features including a friends list panel.",
+  "license": "GPL-3.0",
+  "icon": null,
+  "contact": {
+    "email": "hactazia@gmail.com",
+    "source": "https://github.com/AtelierVR/nox.social",
+    "website": "https://nox.hactazia.fr/",
+    "issues": "https://github.com/AtelierVR/nox.social/issues"
+  },
+  "authors": [
+    {
+      "name": "Hactazia",
+      "email": "hactazia@gmail.com",
+      "website": "https://hactazia.fr/"
+    }
+  ],
+  "contributors": [],
+  "relations": [
+    {
+      "id": "ui",
+      "type": "depends",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "users",
+      "type": "depends",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "network",
+      "type": "depends",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "tables",
+      "type": "recommends",
+      "version": ">=1.0.0"
+    }
+  ],
+  "constraints": [
+    {
+      "type": "after",
+      "id": "users"
+    },
+    {
+      "type": "after",
+      "id": "ui"
+    }
+  ],
+  "entrypoints": {
+    "client": [
+      "Nox.Social.Clients.Client"
+    ]
+  },
+  "references": [],
+  "permissions": []
+}
