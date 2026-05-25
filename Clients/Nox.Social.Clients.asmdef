@@ -7,7 +7,7 @@
         "Nox.UI",
         "Nox.Users",
         "Nox.Network",
-        "Nox.Tables",
+        "Nox.Table",
         "Unity.TextMeshPro",
         "Nox.CCK.Users",
         "Nox.CCK.Network",

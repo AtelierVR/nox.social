@@ -6,7 +6,7 @@
   ],
   "name": "Social",
   "version": "1.0.0",
-  "description": "Provides social features including a friends list panel.",
+  "description": "Social features including friends list, user profiles, and interactions.",
   "license": "GPL-3.0",
   "icon": null,
   "contact": {

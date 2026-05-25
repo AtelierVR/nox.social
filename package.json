@@ -1,5 +1,6 @@
 {
   "name": "nox.social",
   "displayName": "Nox - Social",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "Social features including friends list, user profiles, and interactions."
 }
