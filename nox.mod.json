@@ -22,7 +22,6 @@
       "website": "https://hactazia.fr/"
     }
   ],
-  "contributors": [],
   "relations": [
     {
       "id": "ui",
@@ -59,7 +58,5 @@
     "client": [
       "Nox.Social.Clients.Client"
     ]
-  },
-  "references": [],
-  "permissions": []
+  }
 }
