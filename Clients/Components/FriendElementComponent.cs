@@ -1,11 +1,11 @@
-using System.Threading;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
+using Nox.CCK.Network;
 using Nox.CCK.Utils;
 using Nox.Users;
 using UnityEngine;
 using UnityEngine.UI;
+
 namespace Nox.Social.Clients.Components
 {
 	public class FriendElementComponent : MonoBehaviour
@@ -44,6 +44,28 @@ namespace Nox.Social.Clients.Components
 			component.bannerImage = Reference.GetComponent<Image>("banner_image", go);
 			component.bannerContainer = Reference.GetReference("banner_container", go);
 			component.bannerAspect = Reference.GetComponent<AspectRatioFitter>("banner_ratio", go);
+
+			// Setup NetworkImage callbacks for banner
+			var bannerNetworkImage = component.bannerImage.GetOrAddComponent<NetworkImage>();
+			bannerNetworkImage.OnSuccess.AddListener(texture => {
+				if (texture && texture.height > 0) {
+					component.bannerAspect.aspectRatio = (float)texture.width / texture.height;
+					component.bannerContainer.SetActive(true);
+				}
+			});
+			bannerNetworkImage.OnError.AddListener(_ => {
+				component.bannerContainer.SetActive(false);
+			});
+
+			// Setup NetworkImage callbacks for thumbnail
+			var thumbnailNetworkImage = component.thumbnailImage.GetOrAddComponent<NetworkImage>();
+			thumbnailNetworkImage.OnSuccess.AddListener(_ => {
+				component.thumbnailContainer.SetActive(true);
+			});
+			thumbnailNetworkImage.OnError.AddListener(_ => {
+				component.thumbnailContainer.SetActive(false);
+			});
+
 			return component;
 		}
 
@@ -57,88 +79,35 @@ namespace Nox.Social.Clients.Components
 		public UniTask UpdateContent(IUser user)
 		{
 			display.UpdateText("value", new[] { user.Display });
-			UpdateBanner(user.Banner).Forget();
-			UpdateThumbnail(user.Thumbnail).Forget();
+			UpdateBanner(user.Banner);
+			UpdateThumbnail(user.Thumbnail);
 			return UniTask.CompletedTask;
 		}
 
-		private CancellationTokenSource _thumbnailTokenSource;
-		private CancellationTokenSource _bannerTokenSource;
-
-		private async UniTask UpdateThumbnail(string url)
+		private void UpdateThumbnail(string url)
 		{
-			if (_thumbnailTokenSource != null)
-			{
-				_thumbnailTokenSource?.Cancel();
-				_thumbnailTokenSource?.Dispose();
-			}
-
-			_thumbnailTokenSource = new CancellationTokenSource();
-			
-			if (!string.IsNullOrEmpty(url))
-			{
-				if(thumbnailImage.sprite == null)
-					thumbnailContainer.SetActive(false);
-
-				var texture = await Client.NetworkAPI
-					.FetchTexture(url)
-					.AttachExternalCancellation(_thumbnailTokenSource.Token);
-				if (texture)
-				{
-					thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-					thumbnailContainer.SetActive(true);
-				}
-				else
-				{ 
-					thumbnailImage.sprite = null;
-					thumbnailContainer.SetActive(false);
-				}
-			}
-			else
+			if (string.IsNullOrEmpty(url))
 			{
 				thumbnailImage.sprite = null;
 				thumbnailContainer.SetActive(false);
+				return;
 			}
 
-			_thumbnailTokenSource = null;
+			var networkImage = thumbnailImage.GetOrAddComponent<NetworkImage>();
+			networkImage.Url = url;
 		}
 
-		private async UniTask UpdateBanner(string banner)
+		private void UpdateBanner(string banner)
 		{
-			if (_bannerTokenSource != null)
-			{
-				_bannerTokenSource.Cancel();
-				_bannerTokenSource.Dispose();
-			}
-
-			_bannerTokenSource = new CancellationTokenSource();
-			if (!string.IsNullOrEmpty(banner))
-			{
-				if (bannerImage.sprite == null)
-					bannerContainer.SetActive(false);
-					
-				var texture = await Client.NetworkAPI
-					.FetchTexture(banner)
-					.AttachExternalCancellation(_bannerTokenSource.Token);
-				if (texture && texture.height > 0)
-				{
-					bannerImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-					bannerAspect.aspectRatio = (float)texture.width / texture.height;
-					bannerContainer.SetActive(true);
-				}
-				else
-				{
-					bannerImage.sprite = null;
-					bannerContainer.SetActive(false);
-				}
-			}
-			else
+			if (string.IsNullOrEmpty(banner))
 			{
 				bannerImage.sprite = null;
 				bannerContainer.SetActive(false);
+				return;
 			}
 
-			_bannerTokenSource = null;
+			var networkImage = bannerImage.GetOrAddComponent<NetworkImage>();
+			networkImage.Url = banner;
 		}
 	}
 }
