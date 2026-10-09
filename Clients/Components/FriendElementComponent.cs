@@ -17,6 +17,12 @@ namespace Nox.Social.Clients.Components
 
 		public Identifier Identifier = Identifier.Invalid;
 
+		/// <summary>
+		/// Full user backing this element. When available it is forwarded to the user page
+		/// (like the search results do) so the profile does not have to be fetched again.
+		/// </summary>
+		public IUser User;
+
 		private TextLanguage display;
 
 		public Image bannerImage;
@@ -73,14 +79,22 @@ namespace Nox.Social.Clients.Components
 		{
 			var page   = GetComponentInParent<FriendsComponent>()?.Page;
 			var menuId = page?.GetMenu()?.Id ?? 0;
-			Client.UiAPI?.SendGoto(menuId, "users", "identifier", Identifier);
+			// Pass the whole user when we have it (like nox.search does): the user page then
+			// displays it directly instead of fetching a possibly invalid identifier.
+			if (User != null)
+				Client.UiAPI?.SendGoto(menuId, "users", "user", User);
+			else
+				Client.UiAPI?.SendGoto(menuId, "users", "identifier", Identifier);
 		}
 
 		public UniTask UpdateContent(IUser user)
 		{
-			display.UpdateText("value", new[] { user.Display });
-			UpdateBanner(user.Banner);
-			UpdateThumbnail(user.Thumbnail);
+			User = user;
+			if (user != null)
+				Identifier = user.Identifier;
+			display.UpdateText("value", new[] { user?.Display ?? user?.Username ?? Identifier.ToString() });
+			UpdateBanner(user?.Banner);
+			UpdateThumbnail(user?.Thumbnail);
 			return UniTask.CompletedTask;
 		}
 
