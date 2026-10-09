@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Nox.CCK.Language;
 using Nox.CCK.Mods.Cores;
 using Nox.CCK.Mods.Events;
 using Nox.CCK.Mods.Initializers;
@@ -8,7 +9,6 @@ using Nox.Social.Clients.Pages;
 using Nox.UI;
 using Nox.Users;
 using Nox.Tables;
-using UnityEngine;
 
 namespace Nox.Social.Clients {
 	public class Client : IClientModInitializer {
@@ -42,10 +42,13 @@ namespace Nox.Social.Clients {
 			=> API?.AssetAPI?.GetAssetAsync<T>(path) ?? UniTask.FromResult<T>(null);
 
 		private EventSubscription[] _events = Array.Empty<EventSubscription>();
+		private LanguagePack       _language;
 
 		public void OnInitializeClient(IClientModCoreAPI api) {
 			Instance = this;
 			API      = api;
+			_language = api.AssetAPI.GetAsset<LanguagePack>("lang.asset");
+			LanguageManager.AddPack(_language);
 			_events = new[] {
 				API.EventAPI.Subscribe("menu_goto", OnGoto)
 			};
@@ -54,9 +57,11 @@ namespace Nox.Social.Clients {
 		public void OnDisposeClient() {
 			foreach (var e in _events)
 				API?.EventAPI?.Unsubscribe(e);
-			_events  = Array.Empty<EventSubscription>();
-			API      = null;
-			Instance = null;
+			LanguageManager.RemovePack(_language);
+			_events   = Array.Empty<EventSubscription>();
+			_language = null;
+			API       = null;
+			Instance  = null;
 		}
 
 		private static void OnGoto(EventData context) {

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -24,18 +23,23 @@ namespace Nox.Social.Clients.Components {
 
 		public List<FriendElementComponent> Elements = new();
 
-		public async UniTask UpdateContent(FriendsPage.Group group, GameObject itemPrefab = null, GameObject elementPrefab = null) {
-			itemPrefab    ??= await FriendElementComponent.ItemPrefab;
-			elementPrefab ??= await FriendElementComponent.ElementPrefab;
-
+		/// <summary>Updates the group title (synchronous, no asset loading).</summary>
+		public void UpdateHeader(FriendsPage.Group group) {
 			if (!string.IsNullOrEmpty(group.Title))
 				Text.UpdateText("value", new[] { group.Title });
 			else if (group.Key == "all")
 				Text.UpdateText("friends.all");
 			else
 				Text.UpdateText("friends.group", new[] { group.Key });
+		}
 
-			// Remove extra groups
+		public async UniTask UpdateContent(FriendsPage.Group group, GameObject itemPrefab = null, GameObject elementPrefab = null) {
+			itemPrefab    ??= await FriendElementComponent.ItemPrefab;
+			elementPrefab ??= await FriendElementComponent.ElementPrefab;
+
+			UpdateHeader(group);
+
+			// Remove extra elements
 			for (var i = Elements.Count - 1; i >= 0; i--) {
 				// Check if not present in groups
 				var element = Elements[i];
@@ -46,7 +50,7 @@ namespace Nox.Social.Clients.Components {
 				Elements.RemoveAt(i);
 			}
 
-			// Create/Update groups
+			// Create/Update elements, showing each card as soon as it is ready.
 			foreach (var user in group.Elements) {
 				var component = Elements.FirstOrDefault(e => e.Identifier.Equals(user.Identifier));
 				if (!component) {
@@ -54,6 +58,7 @@ namespace Nox.Social.Clients.Components {
 					Elements.Add(component);
 				}
 				await component.UpdateContent(user);
+				UpdateLayout.UpdateImmediate(Content);
 			}
 		}
 		

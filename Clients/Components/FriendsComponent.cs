@@ -16,6 +16,9 @@ namespace Nox.Social.Clients.Components {
 		private RectTransform content;
 		private List<FriendGroupComponent> _groups = new();
 
+		private GameObject    _statusContainer;
+		private TextLanguage  _statusText;
+
 		public static (GameObject, FriendsComponent) Create(FriendsPage page, RectTransform parent) {
 			var iconAsset      = Client.GetAsset<GameObject>("ui:prefabs/header_icon.prefab");
 			var labelAsset     = Client.GetAsset<GameObject>("ui:prefabs/header_label.prefab");
@@ -66,6 +69,12 @@ namespace Nox.Social.Clients.Components {
 			#endregion
 
 			var contentDash = Reference.GetComponent<RectTransform>("content", withTitle);
+
+			// status box (loading / empty / error) shown above the list
+			component._statusContainer = Client.GetAsset<GameObject>("ui:prefabs/infobox.prefab").Instantiate(contentDash);
+			component._statusText      = Reference.GetComponent<TextLanguage>("text", component._statusContainer);
+			component._statusContainer.SetActive(false);
+
 			// setup scroll + list
 			var scroll = scrollAsset.Instantiate(contentDash);
 			var list   = listAsset.Instantiate(Reference.GetComponent<RectTransform>("content", scroll));
@@ -81,6 +90,18 @@ namespace Nox.Social.Clients.Components {
 			throw new System.NotImplementedException();
 		}
 
+		/// <summary>Shows a status message (loading / empty / error) above the list.</summary>
+		public void SetStatus(string key, string[] args = null) {
+			_statusText.UpdateText(key, args);
+			_statusContainer.SetActive(true);
+			UpdateLayout.UpdateImmediate(_statusContainer);
+		}
+
+		/// <summary>Hides the status message.</summary>
+		public void ClearStatus() {
+			_statusContainer.SetActive(false);
+		}
+
 		private CancellationTokenSource _cts;
 
 		private void OnDestroy() {
@@ -91,9 +112,7 @@ namespace Nox.Social.Clients.Components {
 		async internal UniTask UpdateContent() {
 			var box  = await FriendGroupComponent.BoxPrefab;
 			var grid = await FriendGroupComponent.GridPrefab;
-			var item = await FriendElementComponent.ItemPrefab;
-			var element = await FriendElementComponent.ElementPrefab;
-			
+
 			_cts?.Cancel();
 			_cts?.Dispose();
 
@@ -110,17 +129,34 @@ namespace Nox.Social.Clients.Components {
 				_groups.RemoveAt(i);
 			}
 
-			// Create/Update groups
+			// Step 1: create/update the group containers and their headers, then show them
+			// immediately (before any card is loaded).
 			foreach (var group in groups) {
 				var component = _groups.FirstOrDefault(g => g.key == group.Key);
 				if (!component) {
 					component = await FriendGroupComponent.Create(group.Key, content, box, grid);
 					_groups.Add(component);
+					UpdateLayout.UpdateImmediate(content);
 				}
-				await component.UpdateContent(group, item, element);
+				component.UpdateHeader(group);
 			}
 
 			UpdateLayout.UpdateImmediate(content);
+
+			// The headers are visible now: hide the loading indicator before loading the cards.
+			if (groups.Length > 0)
+				ClearStatus();
+
+			// Step 2: load the cards afterwards, group by group.
+			var item    = await FriendElementComponent.ItemPrefab;
+			var element = await FriendElementComponent.ElementPrefab;
+			foreach (var group in groups) {
+				var component = _groups.FirstOrDefault(g => g.key == group.Key);
+				if (!component)
+					continue;
+				await component.UpdateContent(group, item, element);
+				UpdateLayout.UpdateImmediate(content);
+			}
 		}
 	}
 }
