@@ -6,10 +6,8 @@ using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
 using Nox.CCK.Utils;
 using Nox.Social.Clients.Pages;
-using Nox.Users;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = Nox.CCK.Utils.Logger;
 
 namespace Nox.Social.Clients.Components {
 	public class FriendsComponent : MonoBehaviour {
@@ -31,7 +29,7 @@ namespace Nox.Social.Clients.Components {
 
 			var component = content.AddComponent<FriendsComponent>();
 			component.Page = page;
-			content.name   = $"[{page.GetKey()}_{content.GetEntityId().GetHashCode()}]";
+			content.name   = $"[{page.GetKey()}_{content.GetId()}]";
 
 			var splitContent = Reference.GetComponent<RectTransform>("content", content);
 
